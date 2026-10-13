@@ -98,7 +98,7 @@ docker build -t manager-library-app . && docker run -p 5173:5173 manager-library
 
 | Task | Status | Evidence |
 |---|---|---|
-| T-22 React frontend | Done (all screens implemented) | `npm run build` succeeds; not yet exercised against a live API in this repo |
+| T-22 React frontend | Done (all screens implemented); API walkthrough verified with curl, in-browser walkthrough still manual | `npm run build` succeeds; the app container serves `index.html` on :5173 (13-oct ~15:30, full compose stack, seeded). The calls made by `src/api.js` were reproduced with curl against `http://localhost:8000/api/v1`: `POST /auth/login` 200 (`access_token`, `role: admin`); `GET /categories` 200 (5 categories); `GET /books?q=&page=1&size=10` 200 (`total` 48); `POST /members` 201; `POST /loans` 201 (`status: open`, 1 item, `due_at` +14 days); `POST /loans/{id}/items/{itemId}/return` 200 (`returned_at` set); `GET /loans/overdue` 200 (3 lines, `days_late` 7); `GET /reports/most-borrowed?from=2026-10-01&to=2026-10-31` 200 (rows with `times_borrowed`; without `from`/`to` it is 422, as the page requires both dates). CORS: `OPTIONS /books` with `Origin: http://localhost:5173` -> 204 with `Access-Control-Allow-Origin: http://localhost:5173`, methods `GET, POST, PUT, DELETE, OPTIONS`, headers `Authorization, Content-Type, Accept`. The in-browser (click-through) walkthrough has NOT been done and remains manual. |
 
 ### Translation decisions
 
