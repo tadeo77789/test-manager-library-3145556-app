@@ -48,3 +48,59 @@ No hay prórroga: suban avances parciales con commits pequeños durante la prueb
 | [`test-manager-library-3145556-page`](https://github.com/code-sena/test-manager-library-3145556-page) | Sitio público estático de presentación |
 | [`test-manager-library-3145556-infra`](https://github.com/code-sena/test-manager-library-3145556-infra) | Contenedores, red, volúmenes y motor de base de datos vacío |
 | [`test-manager-library-3145556-tool`](https://github.com/code-sena/test-manager-library-3145556-tool) | Utilidades: sembrador de datos de demostración |
+
+---
+
+## Implementation (T-22)
+
+React 18 + Vite (JavaScript) single-page app. The only notable extra dependency is `react-router-dom`.
+It talks to the backend exclusively over HTTP, following `api-contract.md`. UI texts are in Spanish (contract, Art. XI); code and docs are in English.
+
+### Screens
+
+| Route | Roles | Content |
+|---|---|---|
+| `/login` | public | Login; stores token and role, shows the API `message` on error |
+| `/books` | all | Catalog: search `q`, category filter, pagination. Admin: create, edit, soft-delete, upload/remove cover (multipart field `file`) |
+| `/members`, `/members/:id` | all | List/search/create members; detail with `active_loans` |
+| `/lend` | all | Pick a member and 1-3 distinct books, `POST /loans`, business errors shown as returned |
+| `/loans`, `/loans/:id` | all | Filters `from`/`to`/`status`/`member_id`; detail with items; return per item |
+| `/overdue` | all | Overdue items with `days_late` |
+| `/report` | admin | Most borrowed books between two dates |
+| `/users/new` | admin | Create a librarian |
+
+The menu depends on the role. A `401` clears the session and redirects to the login; a `403` shows a permission message.
+
+### Run
+
+```bash
+npm install
+npm run dev        # http://localhost:5173
+npm run build      # production build in dist/
+docker build -t manager-library-app . && docker run -p 5173:5173 manager-library-app
+```
+
+### Environment variables
+
+| Variable | Default | Notes |
+|---|---|---|
+| `VITE_API_URL` | `http://localhost:8000/api/v1` | Read at build time (Docker build arg `VITE_API_URL`) |
+
+### End-to-end walkthrough
+
+1. Start the API (and database) and open `http://localhost:5173`. Log in with the admin from the API's `ADMIN_USERNAME` / `ADMIN_PASSWORD`.
+2. Catalog: create a book (admin) and optionally upload a cover. Members: register a member.
+3. Lend: choose the member, add 1-3 books, press "Registrar préstamo". The due date (14 days) is shown.
+4. Loans: open the loan and press "Devolver" on each line; when all are returned the status becomes "Cerrado".
+5. Report (admin): choose a date range to see the most borrowed books.
+
+### Status
+
+| Task | Status | Evidence |
+|---|---|---|
+| T-22 React frontend | Done (all screens implemented) | `npm run build` succeeds; not yet exercised against a live API in this repo |
+
+### Translation decisions
+
+- The cover endpoint requires the bearer token, so covers are fetched with `fetch` and shown through a blob URL.
+- The loan list/detail shows the member name by fetching `GET /members/{id}` (loans only carry `member_id`).
