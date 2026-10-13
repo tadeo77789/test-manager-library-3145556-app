@@ -104,3 +104,16 @@ docker build -t manager-library-app . && docker run -p 5173:5173 manager-library
 
 - The cover endpoint requires the bearer token, so covers are fetched with `fetch` and shown through a blob URL.
 - The loan list/detail shows the member name by fetching `GET /members/{id}` (loans only carry `member_id`).
+
+### Dependencies
+
+Versions are pinned exactly in `package.json` and locked in `package-lock.json` (use `npm ci` for reproducible installs; the Dockerfile does).
+
+| Package | Kind | Purpose |
+|---|---|---|
+| `react`, `react-dom` | runtime | UI |
+| `react-router-dom` | runtime | Client-side routing |
+| `vite` | dev | Build tool and dev server |
+| `@vitejs/plugin-react` | dev | JSX/Fast Refresh support for Vite |
+
+No UI or state-management libraries are used. Docker images are pinned (`node:24-alpine`, `nginx:1.27-alpine`).
