@@ -32,13 +32,21 @@ export default function Books() {
   const [version, setVersion] = useState(0);
   const fileRef = useRef(null);
 
+  const requestId = useRef(0);
   const load = useCallback(async () => {
+    const id = ++requestId.current;
     setError(null);
-    try { setData(await api.books({ q, category_id: category, page, size: 10 })); } catch (e) { setError(e); }
+    try {
+      const result = await api.books({ q, category_id: category, page, size: 10 });
+      if (id === requestId.current) setData(result); // ignore responses of superseded queries
+    } catch (e) { if (id === requestId.current) setError(e); }
   }, [q, category, page]);
 
   useEffect(() => { api.categories().then((c) => setCategories(c.items || c)).catch(setError); }, []);
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    const t = setTimeout(load, 250);
+    return () => clearTimeout(t);
+  }, [load]);
 
   async function save(e) {
     e.preventDefault();

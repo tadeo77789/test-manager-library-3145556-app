@@ -1,4 +1,4 @@
-# Build de Vite y servido con nginx en el puerto 5173
+# Build the Vite app and serve it with nginx on port 5173
 FROM node:24-alpine AS build
 WORKDIR /app
 COPY package*.json ./
